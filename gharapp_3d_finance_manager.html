@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GharApp 3D Finance Manager</title>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --bg-dark: #050811;
+      --card-glass: rgba(15, 23, 42, 0.65);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --cyan-neon: #00f2fe;
+      --blue-neon: #4facfe;
+      --purple-neon: #7f00ff;
+      --emerald-neon: #10b981;
+      --rose-neon: #ff0055;
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: rgba(6, 11, 25, 0.85);
+      --shadow-3d: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      perspective: 1000px;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.5;
+      animation: float3D 12s infinite alternate ease-in-out;
+    }
+
+    .orb-1 {
+      top: -100px;
+      left: -100px;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, var(--cyan-neon), transparent 70%);
+    }
+
+    .orb-2 {
+      bottom: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--purple-neon), transparent 70%);
+      animation-delay: -6s;
+    }
+
+    @keyframes float3D {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(50px, 40px, 50px) scale(1.2); }
+    }
+
+    .glass-card-3d {
+      background: var(--card-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow-3d);
+      transform-style: preserve-3d;
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+      position: relative;
+      z-index: 2;
+    }
+
+    .glass-card-3d:hover {
+      border-color: rgba(0, 242, 254, 0.3);
+      box-shadow: 0 30px 60px -10px rgba(0, 242, 254, 0.25);
+    }
+
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(10px);
+    }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 420px;
+      perspective: 1000px;
+    }
+
+    .login-card {
+      padding: 36px 28px;
+      text-align: center;
+      animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes cardEntrance {
+      from { opacity: 0; transform: translate3d(0, 40px, -100px) rotateX(20deg); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0deg); }
+    }
+
+    .brand-icon-3d {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px auto;
+      background: linear-gradient(135deg, var(--cyan-neon), var(--purple-neon));
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 35px rgba(0, 242, 254, 0.4);
+      transform: translateZ(30px);
+      animation: pulseGlow 3s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 15px 35px rgba(0, 242, 254, 0.4); }
+      100% { box-shadow: 0 20px 45px rgba(127, 0, 255, 0.6); }
+    }
+
+    .brand-icon-3d svg {
+      width: 42px;
+      height: 42px;
+      fill: #ffffff;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+
+    .app-title {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #ffffff, var(--cyan-neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+      transform: translateZ(20px);
+    }
+
+    .app-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      transform: translateZ(15px);
+    }
+
+    .user-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+      max-height: 160px;
+      overflow-y: auto;
+      padding: 4px;
+      transform: translateZ(25px);
+    }
+
+    .user-chip-3d {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 14px 10px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .user-chip-3d .avatar-3d {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.5));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px auto;
+      font-weight: 800;
+      color: var(--cyan-neon);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      font-size: 1.1rem;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    .user-chip-3d .name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .user-chip-3d .role {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .user-chip-3d.selected {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--cyan-neon);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+      transform: translateZ(15px) scale(1.05);
+    }
+
+    .input-wrapper-3d {
+      margin-bottom: 22px;
+      transform: translateZ(20px);
+    }
+
+    .input-wrapper-3d input, 
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 15px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      background: var(--input-bg);
+      color: #ffffff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-wrapper-3d input {
+      text-align: center;
+      letter-spacing: 6px;
+      font-size: 1.2rem;
+    }
+
+    .input-wrapper-3d input:focus, 
+    .form-group input:focus, 
+    .form-group select:focus {
+      border-color: var(--cyan-neon);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-3d {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--cyan-neon), var(--blue-neon));
+      color: #030712;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0, 242, 254, 0.35);
+      transition: all 0.25s ease;
+      transform-style: preserve-3d;
+      transform: translateZ(25px);
+    }
+
+    .btn-3d:hover {
+      transform: translateZ(35px) translateY(-2px);
+      box-shadow: 0 15px 35px rgba(0, 242, 254, 0.5);
+    }
+
+    .btn-3d:active {
+      transform: translateZ(10px) translateY(1px);
+    }
+
+    #main-app {
+      display: none;
+      position: relative;
+      z-index: 2;
+      padding-bottom: 90px;
+    }
+
+    .header-3d {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 16px 22px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #ffffff, var(--cyan-neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-menu-3d {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 8px;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-menu-3d:hover {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--cyan-neon);
+    }
+
+    .btn-menu-3d svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffffff;
+    }
+
+    .user-pill {
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      color: var(--text-muted);
+    }
+
+    .btn-logout-3d {
+      background: rgba(255, 0, 85, 0.1);
+      border: 1px solid rgba(255, 0, 85, 0.3);
+      color: var(--rose-neon);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-logout-3d:hover {
+      background: var(--rose-neon);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 18px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: tabFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translate3d(0, 20px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+
+    .balance-card-3d {
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(6, 11, 25, 0.9));
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 242, 254, 0.05);
+      animation: floatBalance 6s infinite alternate ease-in-out;
+    }
+
+    @keyframes floatBalance {
+      0% { transform: translate3d(0, 0, 0) rotateX(0deg); }
+      100% { transform: translate3d(0, -8px, 15px) rotateX(2deg); }
+    }
+
+    .balance-card-3d h3 {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .balance-card-3d .amount {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 30%, var(--cyan-neon));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+      text-shadow: 0 10px 20px rgba(0, 242, 254, 0.2);
+    }
+
+    .section-card-3d {
+      padding: 24px 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-title-3d {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan-neon);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title-3d svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--cyan-neon);
+      filter: drop-shadow(0 0 8px var(--cyan-neon));
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .filter-box {
+      margin-bottom: 18px;
+    }
+
+    .table-responsive-3d {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      background: rgba(6, 11, 25, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--cyan-neon);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .amount-income {
+      color: var(--emerald-neon);
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .amount-expense {
+      color: var(--rose-neon);
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+    }
+
+    .month-total-card {
+      text-align: right;
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .bottom-nav-3d {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(25px);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 500;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    }
+
+    .nav-btn-3d {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      flex: 1;
+      gap: 5px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-btn-3d svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+
+    .nav-btn-3d.active {
+      color: var(--cyan-neon);
+      font-weight: 700;
+      transform: translateY(-4px);
+    }
+
+    .nav-btn-3d.active svg {
+      fill: var(--cyan-neon);
+      filter: drop-shadow(0 0 10px var(--cyan-neon));
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1100;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .sidebar-3d {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 290px;
+      height: 100%;
+      background: rgba(6, 11, 25, 0.95);
+      backdrop-filter: blur(30px);
+      border-right: 1px solid var(--card-border);
+      z-index: 1200;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+    }
+
+    .sidebar-3d.open {
+      transform: translateX(300px);
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .sidebar-header h3 {
+      font-size: 1.2rem;
+      color: var(--cyan-neon);
+      font-weight: 800;
+    }
+
+    .btn-close-sidebar {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.8rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      color: var(--text-primary);
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.25s ease;
+      font-weight: 600;
+    }
+
+    .sidebar-menu-item:hover, .sidebar-menu-item.active {
+      background: rgba(0, 242, 254, 0.12);
+      color: var(--cyan-neon);
+      transform: translateX(6px);
+    }
+
+    .sidebar-menu-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="sidebar-3d" id="sidebar">
+    <div class="sidebar-header">
+      <h3>GharApp Menu</h3>
+      <button class="btn-close-sidebar" onclick="closeSidebar()">&times;</button>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item" onclick="switchTab('dashboard'); closeSidebar();">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home Dashboard</span>
+      </li>
+      <li class="sidebar-menu-item" onclick="switchTab('income'); closeSidebar();">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-4H8l4-4 4 4h-3v4z"/></svg>
+        <span>Income Log</span>
+      </li>
+      <li class="sidebar-menu-item" onclick="switchTab('expenditure'); closeSidebar();">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 8h3l-4 4-4-4h3V8h2v2z"/></svg>
+        <span>Expense Log</span>
+      </li>
+      <li class="sidebar-menu-item" id="adminSidebarBtn" onclick="switchTab('admin'); closeSidebar();" style="display: none;">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span>Manage Accounts</span>
+      </li>
+    </ul>
+  </div>
+
+  <div id="login-screen">
+    <div class="login-wrapper">
+      <div class="glass-card-3d login-card" id="loginCard">
+        
+        <div class="brand-icon-3d">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </div>
+        <h1 class="app-title">GharApp 3D</h1>
+        <p class="app-subtitle">Futuristic Household Finance</p>
+
+        <form id="loginForm">
+          <div style="font-size: 0.78rem; color: var(--text-muted); text-align: left; margin-bottom: 10px; font-weight: 700; text-transform: uppercase;">
+            Select Account
+          </div>
+          
+          <div class="user-select-grid" id="userSelectGrid"></div>
+
+          <div class="input-wrapper-3d">
+            <input type="password" id="loginPin" placeholder="PIN" required maxlength="8" autocomplete="off">
+          </div>
+
+          <button type="submit" class="btn-3d">Unlock App</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="main-app">
+
+    <!-- Header Navbar -->
+    <header class="header-3d">
+      <div class="header-title">
+        <button class="btn-menu-3d" onclick="openSidebar()">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <h1>GharApp</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="user-pill" id="currentUserBadge">User: -</span>
+        <button class="btn-logout-3d" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- TAB 1: FRONT PAGE DASHBOARD (NO LOGGED USER FIELD) -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="glass-card-3d balance-card-3d" id="balanceCard">
+          <h3>Net Balance</h3>
+          <div class="amount" id="netBalance">Rs. 0</div>
+        </div>
+
+        <div class="glass-card-3d section-card-3d">
+          <div class="section-title-3d">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Add New Transaction
+          </div>
+
+          <form id="transForm">
+            <div class="form-group">
+              <label>Transaction Type</label>
+              <select id="transType">
+                <option value="Expense">Expense (-)</option>
+                <option value="Income">Income (+)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Amount (PKR)</label>
+              <input type="number" id="transAmount" placeholder="e.g. 3500" required>
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="transDesc" placeholder="e.g. Utility Bills / Groceries" required>
+            </div>
+
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="transDate" required>
+            </div>
+
+            <button type="submit" class="btn-3d">Save Entry</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 2: INCOME LOG -->
+      <div id="tab-income" class="tab-content">
+        <div class="glass-card-3d section-card-3d">
+          <div class="section-title-3d">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-4H8l4-4 4 4h-3v4z"/></svg>
+            Income History
+          </div>
+
+          <div class="filter-box">
+            <div class="form-group">
+              <label>Filter Month</label>
+              <input type="month" id="incomeMonthPicker" onchange="renderIncomes()">
+            </div>
+          </div>
+
+          <div class="table-responsive-3d">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="incomeTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="month-total-card" style="color: var(--emerald-neon);" id="monthlyIncomeTotalLabel">
+            Total Income: Rs. 0
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: EXPENSE LOG -->
+      <div id="tab-expenditure" class="tab-content">
+        <div class="glass-card-3d section-card-3d">
+          <div class="section-title-3d">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 8h3l-4 4-4-4h3V8h2v2z"/></svg>
+            Expense History
+          </div>
+
+          <div class="filter-box">
+            <div class="form-group">
+              <label>Filter Month</label>
+              <input type="month" id="expenseMonthPicker" onchange="renderExpenditures()">
+            </div>
+          </div>
+
+          <div class="table-responsive-3d">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="expenseTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="month-total-card" style="color: var(--rose-neon);" id="monthlyExpenseTotalLabel">
+            Total Expense: Rs. 0
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: USER MANAGEMENT (ADMIN ONLY) -->
+      <div id="tab-admin" class="tab-content">
+        <div class="glass-card-3d section-card-3d" id="adminCreateCard">
+          <div class="section-title-3d">
+            <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Create New User
+          </div>
+
+          <form id="userForm">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="newUsername" placeholder="e.g. Usman" required>
+            </div>
+            <div class="form-group">
+              <label>PIN Code</label>
+              <input type="password" id="newUserPin" placeholder="e.g. 5678" required>
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="newUserRole">
+                <option value="User">Standard User</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-3d" style="background: linear-gradient(135deg, var(--emerald-neon), #059669);">Add Account</button>
+          </form>
+        </div>
+
+        <div class="glass-card-3d section-card-3d">
+          <div class="section-title-3d">Registered Accounts</div>
+          <ul id="usersList" style="list-style: none; font-size: 0.9rem; color: var(--text-muted);"></ul>
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="bottom-nav-3d">
+      <button class="nav-btn-3d active" id="nav-btn-dashboard" onclick="switchTab('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn-3d" id="nav-btn-income" onclick="switchTab('income')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-4H8l4-4 4 4h-3v4z"/></svg>
+        <span>Income</span>
+      </button>
+      <button class="nav-btn-3d" id="nav-btn-expenditure" onclick="switchTab('expenditure')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 8h3l-4 4-4-4h3V8h2v2z"/></svg>
+        <span>Expenses</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = [];
+    for (let i = 0; i < 45; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 0.5,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: (Math.random() - 0.5) * 0.4,
+        alpha: Math.random() * 0.6 + 0.2
+      });
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 242, 254, ${p.alpha})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#00f2fe';
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    function apply3DTilt(elementId) {
+      const card = document.getElementById(elementId);
+      if (!card) return;
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        const rotateX = -(y / (rect.height / 2)) * 12;
+        const rotateY = (x / (rect.width / 2)) * 12;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      });
+    }
+
+    apply3DTilt('loginCard');
+    apply3DTilt('balanceCard');
+
+    let users = JSON.parse(localStorage.getItem('m_app_users')) || [
+      { username: 'Admin', pin: '1234', role: 'Admin' }
+    ];
+    let transactions = JSON.parse(localStorage.getItem('m_app_trans')) || [];
+    let selectedUsername = users[0] ? users[0].username : '';
+    let currentUser = null;
+
+    // Set Initial Date Inputs
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('transDate').value = today;
+    document.getElementById('incomeMonthPicker').value = today.slice(0, 7);
+    document.getElementById('expenseMonthPicker').value = today.slice(0, 7);
+
+    function saveData() {
+      localStorage.setItem('m_app_users', JSON.stringify(users));
+      localStorage.setItem('m_app_trans', JSON.stringify(transactions));
+      updateDashboard();
+      renderIncomes();
+      renderExpenditures();
+    }
+
+    function openSidebar() {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('sidebarOverlay').classList.add('active');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    function renderUserGrid() {
+      const grid = document.getElementById('userSelectGrid');
+      grid.innerHTML = '';
+
+      users.forEach((u) => {
+        const chip = document.createElement('div');
+        chip.className = `user-chip-3d ${u.username === selectedUsername ? 'selected' : ''}`;
+        chip.onclick = () => selectUserCard(u.username, chip);
+
+        chip.innerHTML = `
+          <div class="avatar-3d">${u.username.charAt(0).toUpperCase()}</div>
+          <div class="name">${u.username}</div>
+          <div class="role">${u.role}</div>
+        `;
+        grid.appendChild(chip);
+      });
+
+      if (!selectedUsername && users.length > 0) {
+        selectedUsername = users[0].username;
+      }
+    }
+
+    function selectUserCard(username, element) {
+      selectedUsername = username;
+      document.querySelectorAll('.user-chip-3d').forEach(c => c.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredPin = document.getElementById('loginPin').value;
+      const user = users.find(u => u.username === selectedUsername);
+
+      if (user && user.pin === enteredPin) {
+        currentUser = user;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        
+        document.getElementById('currentUserBadge').textContent = `${currentUser.username} (${currentUser.role})`;
+
+        if (currentUser.role === 'Admin') {
+          document.getElementById('adminSidebarBtn').style.display = 'flex';
+          document.getElementById('adminCreateCard').style.display = 'block';
+        } else {
+          document.getElementById('adminSidebarBtn').style.display = 'none';
+          document.getElementById('adminCreateCard').style.display = 'none';
+        }
+
+        saveData();
+      } else {
+        alert('Ghalat PIN Code!');
+      }
+    });
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('loginPin').value = '';
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      renderUserGrid();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn-3d').forEach(btn => btn.classList.remove('active'));
+      
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      if (targetTab) targetTab.classList.add('active');
+
+      const activeNavBtn = document.getElementById(`nav-btn-${tabName}`);
+      if (activeNavBtn) activeNavBtn.classList.add('active');
+
+      if (tabName === 'income') renderIncomes();
+      if (tabName === 'expenditure') renderExpenditures();
+    }
+
+    function updateDashboard() {
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '';
+
+      users.forEach(u => {
+        const li = document.createElement('li');
+        li.style.padding = '10px 0';
+        li.style.borderBottom = '1px solid var(--card-border)';
+        li.textContent = `• ${u.username} (${u.role})`;
+        usersList.appendChild(li);
+      });
+
+      let totalInc = 0;
+      let totalExp = 0;
+
+      transactions.forEach(t => {
+        if (t.type === 'Income') totalInc += Number(t.amount);
+        if (t.type === 'Expense') totalExp += Number(t.amount);
+      });
+
+      const net = totalInc - totalExp;
+      document.getElementById('netBalance').textContent = `Rs. ${net.toLocaleString()}`;
+    }
+
+    function renderIncomes() {
+      const selectedMonth = document.getElementById('incomeMonthPicker').value;
+      const tbody = document.getElementById('incomeTableBody');
+      tbody.innerHTML = '';
+
+      let monthlyTotal = 0;
+
+      const filtered = transactions.filter(t => 
+        t.type === 'Income' && t.date.startsWith(selectedMonth)
+      );
+
+      filtered.slice().reverse().forEach(t => {
+        monthlyTotal += Number(t.amount);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${t.date.slice(5)}</td>
+          <td>${t.user}</td>
+          <td>${t.desc}</td>
+          <td class="amount-income">Rs. ${Number(t.amount).toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('monthlyIncomeTotalLabel').textContent = `Total Income: Rs. ${monthlyTotal.toLocaleString()}`;
+    }
+
+    function renderExpenditures() {
+      const selectedMonth = document.getElementById('expenseMonthPicker').value;
+      const tbody = document.getElementById('expenseTableBody');
+      tbody.innerHTML = '';
+
+      let monthlyTotal = 0;
+
+      const filtered = transactions.filter(t => 
+        t.type === 'Expense' && t.date.startsWith(selectedMonth)
+      );
+
+      filtered.slice().reverse().forEach(t => {
+        monthlyTotal += Number(t.amount);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${t.date.slice(5)}</td>
+          <td>${t.user}</td>
+          <td>${t.desc}</td>
+          <td class="amount-expense">Rs. ${Number(t.amount).toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('monthlyExpenseTotalLabel').textContent = `Total Expense: Rs. ${monthlyTotal.toLocaleString()}`;
+    }
+
+    document.getElementById('userForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim();
+      const pin = document.getElementById('newUserPin').value.trim();
+      const role = document.getElementById('newUserRole').value;
+
+      if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        alert('User pehle se maujood hai!');
+        return;
+      }
+
+      users.push({ username, pin, role });
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newUserPin').value = '';
+      renderUserGrid();
+      saveData();
+      alert('Naya User Account Successfully Ban Gaya!');
+    });
+
+    document.getElementById('transForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Automatically tags logged-in user without asking in front form
+      const user = currentUser ? currentUser.username : 'Unknown';
+      const type = document.getElementById('transType').value;
+      const amount = parseFloat(document.getElementById('transAmount').value);
+      const desc = document.getElementById('transDesc').value.trim();
+      const date = document.getElementById('transDate').value;
+
+      transactions.push({ user, type, amount, desc, date });
+      document.getElementById('transAmount').value = '';
+      document.getElementById('transDesc').value = '';
+      saveData();
+      alert('Transaction Saved Successfully!');
+    });
+
+    // Initialize View
+    renderUserGrid();
+  </script>
+</body>
+</html>
